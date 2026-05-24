@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-24
 ### Changed
 
 - Added semantic audit instructions to `speckit.memorylint.run` for contradiction, redundancy, and obsolescence reporting.
@@ -41,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/RbBtSn0w/spec-kit-extensions/compare/memorylint-v1.3.0...HEAD
+[Unreleased]: https://github.com/RbBtSn0w/spec-kit-extensions/compare/memorylint-v1.4.0...HEAD
 [1.0.0]: https://github.com/RbBtSn0w/spec-kit-extensions/releases/tag/memorylint-v1.0.0
 [1.1.0]: https://github.com/RbBtSn0w/spec-kit-extensions/releases/tag/memorylint-v1.1.0
 [1.3.0]: https://github.com/RbBtSn0w/spec-kit-extensions/releases/tag/memorylint-v1.3.0
+[1.4.0]: https://github.com/RbBtSn0w/spec-kit-extensions/releases/tag/memorylint-v1.4.0
