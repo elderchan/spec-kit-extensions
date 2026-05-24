@@ -4,6 +4,7 @@ set -euo pipefail
 
 python3 - <<'PY'
 from pathlib import Path
+import json
 import os
 import re
 import subprocess
@@ -53,6 +54,17 @@ if not prepare_match:
     sys.exit(1)
 
 prepare_code = textwrap.dedent(prepare_match.group("code"))
+
+commit_payload_match = re.search(
+    r"^\s*- name: Create release metadata commit and tag$\n.*?python3 - <<'PY'\n(?P<code>.*?)\n\s*PY$",
+    trigger_text,
+    re.MULTILINE | re.DOTALL,
+)
+if not commit_payload_match:
+    print("Unable to locate the embedded Python release-commit payload script.", file=sys.stderr)
+    sys.exit(1)
+
+commit_payload_code = textwrap.dedent(commit_payload_match.group("code"))
 
 with tempfile.TemporaryDirectory() as tmpdir:
     root = Path(tmpdir)
@@ -132,6 +144,44 @@ with tempfile.TemporaryDirectory() as tmpdir:
     root_readme = (root / "README.md").read_text(encoding="utf-8")
     if "| [Superpowers Bridge](./superpowers-bridge) | 1.3.0 | Bridge package |" not in root_readme:
         print("Release Trigger must update the root README version table for the released extension.", file=sys.stderr)
+        sys.exit(1)
+
+    payload_file = root / "release-payload.json"
+    env.update(
+        {
+            "DEFAULT_BRANCH": "main",
+            "EXPECTED_HEAD_OID": "0123456789abcdef0123456789abcdef01234567",
+            "GITHUB_REPO": "RbBtSn0w/spec-kit-extensions",
+            "PAYLOAD_FILE": str(payload_file),
+        }
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", commit_payload_code],
+        cwd=root,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print("Embedded release-commit payload script failed unexpectedly.", file=sys.stderr)
+        print(result.stderr, file=sys.stderr)
+        sys.exit(1)
+
+    payload = json.loads(payload_file.read_text(encoding="utf-8"))
+    if "input" in payload:
+        print("GraphQL request body must not put mutation variables at top-level input.", file=sys.stderr)
+        sys.exit(1)
+    if "variables" not in payload or "input" not in payload["variables"]:
+        print("GraphQL request body must put mutation input under variables.input.", file=sys.stderr)
+        sys.exit(1)
+
+    mutation_input = payload["variables"]["input"]
+    if mutation_input["branch"]["branchName"] != "main":
+        print("Release commit payload must preserve the target default branch.", file=sys.stderr)
+        sys.exit(1)
+    if mutation_input["expectedHeadOid"] != env["EXPECTED_HEAD_OID"]:
+        print("Release commit payload must preserve expectedHeadOid.", file=sys.stderr)
         sys.exit(1)
 
 print("release workflow checks passed")

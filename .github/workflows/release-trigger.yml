@@ -271,18 +271,20 @@ jobs:
             }
           }
           """,
-              "input": {
-                  "branch": {
-                      "repositoryNameWithOwner": repository,
-                      "branchName": default_branch,
+              "variables": {
+                  "input": {
+                      "branch": {
+                          "repositoryNameWithOwner": repository,
+                          "branchName": default_branch,
+                      },
+                      "message": {
+                          "headline": f"chore: prepare {extension_id} release v{version} [skip ci]",
+                      },
+                      "fileChanges": {
+                          "additions": additions,
+                      },
+                      "expectedHeadOid": expected_head_oid,
                   },
-                  "message": {
-                      "headline": f"chore: prepare {extension_id} release v{version} [skip ci]",
-                  },
-                  "fileChanges": {
-                      "additions": additions,
-                  },
-                  "expectedHeadOid": expected_head_oid,
               },
           }
 
