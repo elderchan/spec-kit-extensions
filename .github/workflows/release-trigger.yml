@@ -168,6 +168,11 @@ jobs:
               )
               if updated_rows != 1:
                   raise SystemExit(f"Failed to update {root_readme_file} version row for {extension_id}")
+              root_readme_text = re.sub(
+                  rf"(releases/download/)({re.escape(extension_id)}-v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)(/{re.escape(extension_id)}\.zip)",
+                  rf"\g<1>{tag}\g<3>",
+                  root_readme_text,
+              )
               root_readme_file.write_text(root_readme_text, encoding="utf-8")
 
           # Rotate changelog unreleased section into a versioned release section when present.

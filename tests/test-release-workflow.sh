@@ -80,6 +80,11 @@ with tempfile.TemporaryDirectory() as tmpdir:
             |---|---|---|
             | [Superpowers Bridge](./superpowers-bridge) | 1.0.0 | Bridge package |
             | [MemoryLint](./memorylint) | 1.3.0 | Memory governance |
+
+            Install from release:
+
+            https://github.com/RbBtSn0w/spec-kit-extensions/releases/download/superpowers-bridge-v1.0.0/superpowers-bridge.zip
+            https://github.com/RbBtSn0w/spec-kit-extensions/releases/download/memorylint-v1.3.0/memorylint.zip
             """
         ),
         encoding="utf-8",
@@ -144,6 +149,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
     root_readme = (root / "README.md").read_text(encoding="utf-8")
     if "| [Superpowers Bridge](./superpowers-bridge) | 1.3.0 | Bridge package |" not in root_readme:
         print("Release Trigger must update the root README version table for the released extension.", file=sys.stderr)
+        sys.exit(1)
+    if "releases/download/superpowers-bridge-v1.3.0/superpowers-bridge.zip" not in root_readme:
+        print("Release Trigger must update root README release download links for the released extension.", file=sys.stderr)
+        sys.exit(1)
+    if "releases/download/memorylint-v1.3.0/memorylint.zip" not in root_readme:
+        print("Release Trigger must not update unrelated extension release download links.", file=sys.stderr)
         sys.exit(1)
 
     payload_file = root / "release-payload.json"
