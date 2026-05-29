@@ -192,7 +192,7 @@ pipeline, machine-readable report contract, and release criteria.
 ### Install from ZIP (Recommended)
 
 ```bash
-specify extension add memorylint --from https://github.com/RbBtSn0w/spec-kit-extensions/releases/download/memorylint-v1.5.0/memorylint.zip
+specify extension add memorylint --from https://github.com/RbBtSn0w/spec-kit-extensions/releases/download/memorylint-v1.5.1/memorylint.zip
 ```
 
 ### Install from GitHub Repository (Development)
