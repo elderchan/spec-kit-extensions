@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated `/speckit.superb.review` to emit a stable workflow decision block that
+  routes passing, blocked, inconclusive, missing-artifact, and abandoned-feature
+  outcomes to the correct next Spec Kit command or user approval gate.
+
 ## [1.5.0] - 2026-05-27
 ### Added
 
