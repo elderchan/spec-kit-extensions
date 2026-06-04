@@ -317,6 +317,29 @@ require(
     and "Add missing tasks to tasks.md" not in review,
     "review.md must recommend task edits without implying it edits tasks.md itself",
 )
+require(
+    "## Workflow Decision" in review
+    and "**Feature status:** Tasked | Abandoned | unknown" in review
+    and "**Gate:** after_tasks.review" in review
+    and "**Outcome:** PASS | BLOCKED | INCONCLUSIVE" in review
+    and "**Reason:** none | coverage_gap | task_quality_issue | spec_ambiguity | plan_task_mismatch | missing_artifact | abandoned_feature" in review
+    and "**Next command:** `/speckit.implement` | `/speckit.clarify` | `/speckit.plan` | `/speckit.tasks` | none" in review
+    and "**Requires user approval:** true | false" in review,
+    "review.md must emit a stable workflow decision block pinning the strict routing contract",
+)
+require(
+    "If `spec.md` exists and its actual status is `Abandoned`" in review
+    and "**Feature status:** Abandoned" in review
+    and "**Outcome:** BLOCKED" in review
+    and "**Reason:** abandoned_feature" in review
+    and "ERROR: Feature status is Abandoned. Reactivate the feature before running coverage review." in review,
+    "review.md must honor Abandoned feature status before missing-artifact fallback",
+)
+require(
+    review.index("If `spec.md` exists and its actual status is `Abandoned`")
+    < review.index("If `spec.md`, `plan.md`, or `tasks.md` is missing or cannot be resolved after"),
+    "review.md must evaluate abandoned status before missing_artifact fallback",
+)
 
 require(
     "-notmatch '^\\*\\*Status\\*\\*: Tasked$'" not in ps_test,
