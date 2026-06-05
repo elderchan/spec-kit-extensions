@@ -5,7 +5,7 @@ extension:
   name: Superpowers Bridge
   version: 1.5.2
   description: "Bridges selected Superpowers disciplines into Spec Kit as evidence-first trust gates for agent workflows."
-  author: rbbtsn0w
+  author: RbBtSn0w
   repository: https://github.com/RbBtSn0w/spec-kit-extensions
   license: MIT
   homepage: https://github.com/RbBtSn0w/spec-kit-extensions
