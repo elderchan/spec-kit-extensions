@@ -61,7 +61,7 @@ demo:
    `verification-before-completion` are `READY`.
 3. Run one normal Spec Kit feature through `specify`, `plan`, `tasks`, and
    `implement`.
-4. Let `/speckit.superb.tdd` run before implementation and
+4. Let `/speckit.superb.controller` run before implementation and
    `/speckit.superb.verify` run after implementation.
 5. Treat the first success as real only when `/speckit.superb.verify` captures
    fresh run-local evidence with test output and a spec-coverage checklist.
@@ -84,8 +84,9 @@ missing requirement-to-task link before `Verified` is synchronized.
  └─────────┬─────────┘
            │
  ┌─────────▼─────────┐
- │ /speckit plan     │ ─────> Spec Kit owns technical planning
- └─────────┬─────────┘
+ │ /speckit plan     │ ─────> 1. Spec Kit owns technical planning
+ └─────────┬─────────┘        2. 📋 plan-gate (Mandatory: Granularity & placeholders)
+           │                  (after_plan)
            │
  ┌─────────▼─────────┐
  │ /speckit tasks    │ ─────> 1. Execute Core Tasks Logic
@@ -93,7 +94,7 @@ missing requirement-to-task link before `Verified` is synchronized.
            │                  (after_tasks)
            │
  ┌─────────▼─────────┐       (before_implement)
- │ /speckit implement│ ─────> 1. 🔴 tdd (Mandatory: RED-GREEN-REFACTOR Enforcer)
+ │ /speckit implement│ ─────> 1. ⚙️ controller (Mandatory: Implementation Controller)
  └─────────┬─────────┘        2. Execute Core Implement Logic
            │                  3. ✅ verify (Mandatory: Evidence-Based Completion Gate)
            │                  (after_implement)
@@ -110,7 +111,8 @@ missing requirement-to-task link before `Verified` is synchronized.
 
 - Local skill discovery and readiness diagnostics (`check`)
 - Optional post-specification brainstorming refinement (`brainstorm`)
-- Mandatory TDD gate before implementation (`tdd`)
+- Mandatory Plan gate (granularity and placeholders) (`plan-gate`)
+- Mandatory Implementation Controller gate (`controller`) with SDD/TDD orchestration
 - Task/spec coverage and TDD-readiness check (`review`)
 - Mandatory evidence-based completion gate (`verify`)
 - Bridge-native spec-aligned reviewer role (`critique`)
@@ -144,10 +146,9 @@ Spec Kit:
 - Implementation orchestration
 
 The following superpowers workflow skills are therefore **not** exposed as
-independent bridge commands or hooks:
+independent standalone bridge commands:
 
 - `writing-plans`
-- `subagent-driven-development`
 - `executing-plans`
 - `using-git-worktrees`
 
@@ -184,7 +185,7 @@ unexposed workflow skills.
 | Superpowers skill | Bridge surface | Spec Kit integration point | Mechanism | Boundary |
 |---|---|---|---|---|
 | `brainstorming` | `/speckit.superb.brainstorm` | After `/speckit.specify`, before `/speckit.clarify` or `/speckit.plan` | Optional `after_specify` hook or manual rerun/refinement | Refines the existing `spec.md` with user approval; does not create a feature, branch, parallel design doc, `plan.md`, `tasks.md`, or lifecycle status. |
-| `test-driven-development` | `/speckit.superb.tdd` | Immediately before `/speckit.implement` writes production code | Required `before_implement` hook | Enforces RED/GREEN/REFACTOR readiness; does not own implementation orchestration. |
+| `test-driven-development` | `/speckit.superb.controller` | Immediately before `/speckit.implement` writes production code | Required `before_implement` hook | Enforces TDD discipline and orchestrates single/multi-agent implementation layers. |
 | `verification-before-completion` | `/speckit.superb.verify` | Immediately after `/speckit.implement` claims completion | Required `after_implement` hook | Requires fresh evidence before completion claims and synchronizes only bridge-owned verified state. |
 | `systematic-debugging` | `/speckit.superb.debug` | During implementation when failures repeat or behavior is unexplained | Manual support command | Produces root-cause investigation and evidence; does not bypass TDD or verification gates. |
 | `dispatching-parallel-agents` | `/speckit.superb.debug` parallel mode | Debugging only, when there are 2+ independent failure domains | Borrowed discipline inside `debug` | Creates independent investigation task packages; the controller performs final synthesis and verification. |
@@ -192,18 +193,66 @@ unexposed workflow skills.
 | `receiving-code-review` | `/speckit.superb.respond` | After critique output, PR comments, or external review feedback arrives | Manual support command | Triage, accept/reject/clarify, and implement accepted items; it does not produce the original review. |
 | `finishing-a-development-branch` | `/speckit.superb.finish` | After verification succeeds and integration is ready | Manual support command | Handles PR/merge/keep/discard decisions and bridge-owned handoff state; does not replace repository policy. |
 | `writing-plans` | `/speckit.superb.review` task-quality checks | After `/speckit.tasks`, before implementation | Borrowed discipline inside `review` | Checks file ownership, task granularity, RED/GREEN target, and review checkpoint readiness; does not generate or edit `plan.md` or `tasks.md`. |
-| `subagent-driven-development` | Not exposed | None | Not bridged | Would take over implementation orchestration, which belongs to the user, agent, and Spec Kit implementation flow. |
-| `executing-plans` | Not exposed | None | Not bridged | Would execute `plan.md` / `tasks.md` directly and compete with `/speckit.implement`. |
+| `subagent-driven-development` | Not exposed | None | Borrowed discipline inside `controller` | Integrated internally as a worker orchestration layer for `controller.md` and `plan-gate.md`. |
+| `executing-plans` | Not exposed | None | Borrowed discipline inside `controller` | Drives Inline Execution (Layer 1) in Single-Agent Mode; does not compete with `/speckit.implement`. |
 | `using-git-worktrees` | Not exposed | None | Not bridged | Repository/worktree strategy is project policy, not a required Spec Kit extension behavior. |
 | `using-superpowers` | Not exposed | Agent/bootstrap layer | Not part of the extension command surface | Skill installation and loading remain outside the feature lifecycle; `/speckit.superb.check` only reports readiness. |
 | `writing-skills` | Not exposed | Extension maintenance only | Not part of feature delivery | Useful for maintaining skills, but not for a Spec Kit feature workflow. |
 
+### Dual-Layer Fallback & The "Superb" Skill Set Matrix
+
+This bridge operates on a **Dual-Layer Fallback Architecture**:
+- **Hard Requirements** are skills that the bridge cannot run its baseline validation hooks without (no simple text/regex fallbacks exist).
+- **Optional Skills** improve workflow quality but are not strictly required because the bridge provides **Layer 2 local fallbacks** (such as regular expressions, local checklists, or embedded prompts) or treats the corresponding stages as non-blocking.
+
+To unlock the full, premium experience of the Superpowers Bridge across all Spec Kit workflow stages (the **"Superb" Suite**), the following skills are recommended:
+
+| Stage / Feature | Intended Command | Optimal Skills Required (Layer 1) | Local Fallback (Layer 2) |
+|---|---|---|---|
+| **Spec Refinement** | `/speckit.superb.brainstorm` | `brainstorming` | Hook skipped (optional) |
+| **Inline Implementation** | `/speckit.superb.controller` (`--inline`) | `executing-plans` + `test-driven-development` | Local TDD loop |
+| **Multi-Agent Dispatch** | `/speckit.superb.controller` | `subagent-driven-development` + `test-driven-development` | Single-Agent fallback |
+| **Double-Review Quality Gate** | `/speckit.superb.controller` (Review) | `code-review` | Local checklist / `critique` |
+| **Requirement Verification** | `/speckit.superb.verify` | `verification-before-completion` + `writing-plans` | Baseline verification |
+| **Troubleshooting Escalation** | `/speckit.superb.debug` | `systematic-debugging` + `dispatching-parallel-agents` | Command disabled |
+| **Review Feedback & Handoff** | `/speckit.superb.critique` / `respond` | `requesting-code-review` + `receiving-code-review` | Local critique only |
+| **Branch Completion** | `/speckit.superb.finish` | `finishing-a-development-branch` | Command disabled |
+
+### Runtime Mode Diagnostics (Q&A)
+
+**Q: How do I know if Subagent-Driven Development (SDD) is active or if the controller is running in Single-Agent serial mode?**
+
+**A:** The controller dynamically resolves the execution mode during startup and reports its selection in the run log. You can verify the active mode through static checks or dynamic run behaviors.
+
+1. **Static Diagnostics (Before Execution)**:
+   Run the diagnostics command:
+   ```text
+   /speckit.superb.check
+   ```
+   Check the **Skill Status** and **Discipline Enhancements** sections:
+   - If `subagent-driven-development` status is `READY`, the native SDD skill is installed.
+   - If `executing-plans` status is `READY`, the controller will use native Inline Execution discipline when degrading to Single-Agent mode.
+   - If `code-review` status is `READY`, the controller has access to the double-review quality gate under multi-agent mode.
+
+2. **Dynamic Log Signals (During Execution)**:
+   Look at the controller's initial startup output:
+   - **Multi-Agent SDD Mode**: The log displays `Multi-Agent SDD Mode (Default)` and resolves `subagent-driven-development/SKILL.md` (or composite TDD + Code-Review fallback). You will see subagents being defined and invoked (e.g., `Spec Reviewer` and `Quality Reviewer`), and tasks in `tasks.md` will be updated and ticked automatically without user prompts.
+   - **Single-Agent Mode**: The log displays `Single-Agent Mode (Fallback)` or mentions `degrading gracefully to Single-Agent Mode` (due to missing `define_subagent` tool capability, missing required skills, or explicit `--inline` / `--sdd=false` user overrides). Implementation code modifications and TDD verification will be performed directly within the parent conversation.
+
+**Q: Can I force the controller to run in Single-Agent mode?**
+
+**A:** Yes. You can bypass subagent dispatching by passing `--inline` or `--sdd=false` inside the command arguments:
+```text
+/speckit.implement --inline
+```
+This forces the controller to run implementation inline inside the parent session, even if subagent capabilities and SDD skills are fully available.
+
 ### How The Matrix Connects To Spec Kit
 
-- Hooked stages are limited to `after_specify`, `after_tasks`,
+- Hooked stages are limited to `after_specify`, `after_plan`, `after_tasks`,
   `before_implement`, and `after_implement`.
-- Required hooks are reserved for implementation trust boundaries:
-  `/speckit.superb.tdd` before implementation and `/speckit.superb.verify`
+- Required hooks are reserved for plan quality and implementation trust boundaries:
+  `/speckit.superb.plan-gate` after plan, `/speckit.superb.controller` before implementation, and `/speckit.superb.verify`
   after implementation.
 - Optional hooks improve artifact quality after Spec Kit has created the
   relevant artifact, but they do not own the next stage.
@@ -306,7 +355,7 @@ Run the diagnostics command after installation:
 |---|---|---|
 | `/speckit.superb.check` | Standalone | Verify installed skill availability and hook readiness |
 | `/speckit.superb.brainstorm` | Hookable | Optionally refine the active `spec.md` after `speckit.specify` |
-| `/speckit.superb.tdd` | Hookable | Enforce RED-GREEN-REFACTOR before code changes |
+| `/speckit.superb.controller` | Hookable | Enforce RED-GREEN-REFACTOR before code changes |
 | `/speckit.superb.review` | Hookable | Check `tasks.md` coverage and TDD-readiness |
 | `/speckit.superb.verify` | Hookable | Block completion claims without fresh evidence |
 | `/speckit.superb.critique` | Standalone | Bridge-native spec-aligned code review |
@@ -324,7 +373,7 @@ should be used, whether it is automatic or manual, and what problem it solves.
 | `/speckit.superb.check` | Manual | Right after installing the extension or when bridge behavior looks wrong | Confirms which superpowers skills were found, where they were found, and which hooks or standalone commands are ready |
 | `/speckit.superb.brainstorm` | Optional hook after `specify` | After `spec.md` is created, before `clarify` or `plan` | Uses Superpowers brainstorming discipline to refine the active Spec Kit spec without creating a second design document |
 | `/speckit.superb.review` | Optional hook after `tasks` | After `tasks.md` is generated, before implementation starts | Checks whether `tasks.md` really covers `spec.md` and whether the task set is precise enough for strict TDD |
-| `/speckit.superb.tdd` | Mandatory hook before `implement` | Immediately before implementation begins | Enforces RED-GREEN-REFACTOR and blocks speculative production code before a failing test |
+| `/speckit.superb.controller` | Mandatory hook before `implement` | Immediately before implementation begins | Enforces RED-GREEN-REFACTOR and blocks speculative production code before a failing test |
 | `/speckit.superb.verify` | Mandatory hook after `implement` | Immediately after implementation claims are made | Requires fresh evidence before any completion claim and verifies spec coverage against passing tests |
 | `/speckit.superb.critique` | Manual | After a major task, after implementation, or before opening a PR | Reviews the code diff against `spec.md`, `plan.md`, and `tasks.md` to catch implementation drift |
 | `/speckit.superb.debug` | Manual | When TDD is stuck, repeated fixes failed, or behavior is still unexplained | Switches from trial-and-error to root-cause debugging |
@@ -339,7 +388,7 @@ For most users, the extension should feel like this:
 2. Run `/speckit.specify`; optionally let `/speckit.superb.brainstorm` refine the new `spec.md`.
 3. Continue the normal Spec Kit flow through `clarify`, `plan`, and `tasks`.
 4. Let `/speckit.superb.review` run after `tasks` if you want a task coverage and TDD-readiness gate.
-5. Start `/speckit.implement`; `/speckit.superb.tdd` runs before implementation and `/speckit.superb.verify` runs after it.
+5. Start `/speckit.implement`; `/speckit.superb.controller` runs before implementation and `/speckit.superb.verify` runs after it.
 6. If implementation gets stuck, run `/speckit.superb.debug`.
 7. If you want an implementation review, run `/speckit.superb.critique`.
 8. If review feedback arrives, run `/speckit.superb.respond`.
@@ -362,7 +411,7 @@ actually observe with the current hook surface.
 | State | Written By | Meaning |
 |---|---|---|
 | `Tasked` | `after_tasks` via `/speckit.superb.review` | `tasks.md` exists and the feature has entered task-driven implementation preparation |
-| `Implementing` | `before_implement` via `/speckit.superb.tdd` | implementation has formally entered execution |
+| `Implementing` | `before_implement` via `/speckit.superb.controller` | implementation has formally entered execution |
 | `Verified` | `/speckit.superb.verify` | implementation passed the verification gate and requirement evidence checks |
 | `In Review` | `/speckit.superb.finish` after successful PR creation | work has been handed off into external review/merge flow |
 | `Abandoned` | `/speckit.superb.finish` after successful discard | work was explicitly discarded |
@@ -402,8 +451,9 @@ So the highest accurate PR-based state in the current design is:
 This extension registers the following hooks:
 
 - `after_specify` → `brainstorm` (optional)
+- `after_plan` → `plan-gate` (mandatory)
 - `after_tasks` → `review` (optional)
-- `before_implement` → `tdd` (mandatory)
+- `before_implement` → `controller` (mandatory)
 - `after_implement` → `verify` (mandatory)
 
 ## Hook Requirement Baseline
@@ -415,8 +465,9 @@ quality without owning the next Spec Kit stage.
 | Hook | Command | Requirement | Baseline rationale |
 |---|---|---|---|
 | `after_specify` | `/speckit.superb.brainstorm` | Optional | Refines an existing spec, but simple features and teams that prefer direct clarification should not be blocked. |
+| `after_plan` | `/speckit.superb.plan-gate` | Required | Plan quality is a core bridge guarantee; task lists and plans should not contain placeholders or coarse tasks. |
 | `after_tasks` | `/speckit.superb.review` | Optional | Finds task/spec gaps and task-quality issues, but users may intentionally proceed with acknowledged gaps. |
-| `before_implement` | `/speckit.superb.tdd` | Required | Implementation discipline is a core bridge guarantee; production code should not begin without the TDD gate. |
+| `before_implement` | `/speckit.superb.controller` | Required | Implementation discipline is a core bridge guarantee; production code should not begin without the TDD gate. |
 | `after_implement` | `/speckit.superb.verify` | Required | Completion claims are not trustworthy without fresh verification evidence and spec coverage. |
 
 Future strict modes may choose to require `after_tasks`, but the default
@@ -435,7 +486,7 @@ Use this prompt pattern:
 ```text
 Run this goal with the full Spec Kit + Superpowers Bridge baseline workflow.
 Treat optional superb hooks as accepted for this goal: run `/speckit.superb.brainstorm` after `/speckit.specify` and run `/speckit.superb.review` after `/speckit.tasks` unless the required context is unavailable or I explicitly tell you to skip them.
-Required superb hooks must still run: `/speckit.superb.tdd` before implementation and `/speckit.superb.verify` after implementation.
+Required superb hooks must still run: `/speckit.superb.controller` before implementation and `/speckit.superb.verify` after implementation.
 Use `/speckit.superb.debug` when repeated failures or unexplained behavior appear, `/speckit.superb.critique` before PR/merge or after major implementation, `/speckit.superb.respond` for review feedback, and `/speckit.superb.finish` after verification when integration decisions are needed.
 ```
 
@@ -473,7 +524,7 @@ Superpowers Bridge may only refine, check, report, or synchronize within declare
   after Spec Kit creates it.
 - `review`, `critique`, and `debug` report findings, drafts, or task packages;
   they do not own planning artifacts.
-- `tdd`, `verify`, and `finish` may synchronize only the bridge-owned lifecycle
+- `controller`, `verify`, and `finish` may synchronize only the bridge-owned lifecycle
   states documented below.
 
 ## Responsibility Boundaries
@@ -513,7 +564,7 @@ already own specification quality and artifact consistency.
 | `/speckit.checklist` | Spec Kit | Requirements-writing quality | Tests whether requirements are complete, clear, consistent, measurable, and ready for implementation |
 | `/speckit.analyze` | Spec Kit | Cross-artifact consistency | Detects contradictions, ambiguity, duplication, and missing links across `spec.md`, `plan.md`, and `tasks.md` |
 | `/speckit.superb.review` | Superpowers Bridge | Coverage + TDD readiness | Determines whether `tasks.md` is implementation-ready and can support `before_implement` TDD enforcement |
-| `/speckit.superb.tdd` | Superpowers Bridge | Implementation discipline | Enforces RED-GREEN-REFACTOR once implementation begins |
+| `/speckit.superb.controller` | Superpowers Bridge | Implementation discipline | Enforces RED-GREEN-REFACTOR once implementation begins |
 | `/speckit.superb.verify` | Superpowers Bridge | Completion evidence | Blocks completion claims unless full verification evidence exists |
 | `/speckit.superb.finish` | Superpowers Bridge | Integration handoff state | Moves the feature into `In Review` after PR creation or `Abandoned` after successful discard |
 
@@ -548,7 +599,7 @@ already own specification quality and artifact consistency.
 
  /speckit.implement
         |
-        +--> /speckit.superb.tdd
+        +--> /speckit.superb.controller
         |     enforces test-first implementation before work starts
         |     writes `**Status**: Implementing`
         |
@@ -580,7 +631,7 @@ already own specification quality and artifact consistency.
 - Use `/speckit.checklist` when you want to test the quality of the written requirements themselves.
 - Use `/speckit.analyze` when you want a broad consistency check across `spec.md`, `plan.md`, and `tasks.md`.
 - Use `/speckit.superb.review` when you specifically want to know whether `tasks.md` is complete enough and precise enough for strict TDD-driven implementation.
-- Use `/speckit.superb.tdd` and `/speckit.superb.verify` only around implementation, not during specification or planning.
+- Use `/speckit.superb.controller` and `/speckit.superb.verify` only around implementation, not during specification or planning.
 - Use `/speckit.superb.critique` when the code itself, not just the planning artifacts, needs to be reviewed against the declared requirements.
 - Use `/speckit.superb.debug` when you need root-cause investigation rather than another quick fix.
 - Use `/speckit.superb.respond` after review comments arrive and you need a disciplined way to accept, reject, or clarify them.
